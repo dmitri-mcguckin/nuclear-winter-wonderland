@@ -2,7 +2,7 @@
 
 source ./VERSION
 
-DEPS=( 7z curl html2text )
+DEPS=( pwd rev cut tar 7z curl html2text )
 
 BASE_NAME=$(pwd | rev | cut -d/ -f1 | rev)-$PACK_VERSION-$FORGE_VERSION
 CLIENT_NAME=$BASE_NAME.zip
@@ -31,7 +31,7 @@ mv $CLIENT_NAME build
 # Create the server
 cp -r res server_build
 # TODO: Find a way to download via curses janky af API
-tar -czvf $SERVER_NAME server_build/. >> /dev/null
+tar -C server_build -czvf $SERVER_NAME . >> /dev/null
 mv $SERVER_NAME build
 
 # Cleanup
