@@ -32,8 +32,6 @@ if [[ ! -d ./build ]]; then mkdir build; fi
 mkdir staging
 cp -r res/* staging
 cp -r $MOD_DIR staging
-tar -C staging -czvf $SERVER_NAME . >> /dev/null
-mv $SERVER_NAME build
 
 # Cleanup old forge
 rm -rf res/minecraft_server.*  res/forge-* res/libraries
@@ -50,6 +48,10 @@ java -jar $FORGE_JAR --installServer
 # Post-forge-install-cleanup
 rm $FORGE_JAR *.log
 cd ..
+
+# Package
+tar -C staging -czvf $SERVER_NAME . >> /dev/null
+mv $SERVER_NAME build
 
 # Cleanup
 rm -rf staging
