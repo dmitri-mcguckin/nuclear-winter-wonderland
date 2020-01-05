@@ -33,9 +33,6 @@ mkdir staging
 cp -r res/* staging
 cp -r $MOD_DIR staging
 
-# Cleanup old forge
-rm -rf res/minecraft_server.*  res/forge-* res/libraries
-
 # Install forge
 FORGE_JAR="forge-$MC_VERSION-$FORGE_VERSION-installer.jar"
 FORGE_URL="$BASE_URL$MC_VERSION-$FORGE_VERSION/$FORGE_JAR"
