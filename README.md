@@ -72,3 +72,5 @@
   * [Cooking for Blockheads](https://minecraft.curseforge.com/mc-mods/231484)
   * [BiblioCraft](https://minecraft.curseforge.com/mc-mods/228027)
   * [MTLib](https://minecraft.curseforge.com/mc-mods/253211)
+  * [Chisel](https://minecraft.curseforge.com/mc-mods/235279)
+  * [Chisels & Bits](https://minecraft.curseforge.com/mc-mods/231095)
