@@ -8,7 +8,10 @@ MOD_DIR=$MC_HOME/$BASE_NAME/minecraft/mods
 
 source ./res/SERVER-OPTIONS
 
-if [[ ! -d $MOD_DIR ]]; then
+if [[ -z $MC_HOME ]]; then
+  echo -e "Evironment variable MC_HOME must be set in order to build the server!"
+  exit -1
+elif [[ ! -d $MOD_DIR ]]; then
   echo -e "Client version of the pack must be staged first before building server!"
   exit -1
 fi
