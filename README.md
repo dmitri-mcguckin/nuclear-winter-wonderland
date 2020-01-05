@@ -74,3 +74,4 @@
   * [MTLib](https://minecraft.curseforge.com/mc-mods/253211)
   * [Chisel](https://minecraft.curseforge.com/mc-mods/235279)
   * [Chisels & Bits](https://minecraft.curseforge.com/mc-mods/231095)
+  * [ConnectedTexturesMod](https://minecraft.curseforge.com/mc-mods/267602)
