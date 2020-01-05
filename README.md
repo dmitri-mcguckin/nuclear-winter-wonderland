@@ -75,3 +75,4 @@
   * [Chisel](https://minecraft.curseforge.com/mc-mods/235279)
   * [Chisels & Bits](https://minecraft.curseforge.com/mc-mods/231095)
   * [ConnectedTexturesMod](https://minecraft.curseforge.com/mc-mods/267602)
+  * [Funky Locomotion](https://minecraft.curseforge.com/mc-mods/224190)
