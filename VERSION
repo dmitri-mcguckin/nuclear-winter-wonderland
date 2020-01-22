@@ -1,4 +1,4 @@
-export PACK_VERSION=3.0.0
+export PACK_VERSION=3.0.1
 export FORGE_VERSION=2847
 export BASE_NAME=$(pwd | rev | cut -d/ -f1 | rev)-$PACK_VERSION-$FORGE_VERSION
 export BASE_URL=https://files.minecraftforge.net/maven/net/minecraftforge/forge/
