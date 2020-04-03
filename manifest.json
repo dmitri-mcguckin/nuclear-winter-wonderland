@@ -3,7 +3,7 @@
     "version": "1.12.2",
     "modLoaders": [
       {
-        "id": "forge-14.23.5.2847",
+        "id": "forge-14.23.5.2838",
         "primary": true
       }
     ]
@@ -11,7 +11,7 @@
   "manifestType": "minecraftModpack",
   "manifestVersion": 1,
   "name": "Nuclear Winter Wonderland",
-  "version": "2.1.2",
+  "version": "3.2.1",
   "author": "the_ivo_robotnic",
   "files": [
     {
@@ -71,7 +71,7 @@
     },
     {
       "projectID": 64578,
-      "fileID": 2858816,
+      "fileID": 2775231,
       "required": true
     },
     {

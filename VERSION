@@ -1,4 +1,9 @@
-export PACK_VERSION=3.2.0
-export FORGE_VERSION=2847
-export BASE_NAME=$(pwd | rev | cut -d/ -f1 | rev)-$PACK_VERSION-$FORGE_VERSION
-export BASE_URL=https://files.minecraftforge.net/maven/net/minecraftforge/forge/
+export FORGE_VERSION=2838
+export FORGE_BASE_URL=https://files.minecraftforge.net/maven/net/minecraftforge/forge/
+
+export SPONGE_VERSION=7.2.0
+export SPONGE_BASE_URL=https://repo.spongepowered.org/maven/org/spongepowered/spongeforge/
+
+export PACK_VERSION=3.2.1
+export MC_VERSION=1.12.2
+export PACK_NAME=$(pwd | rev | cut -d/ -f1 | rev)-$PACK_VERSION-$FORGE_VERSION

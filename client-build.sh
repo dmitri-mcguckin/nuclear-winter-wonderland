@@ -3,7 +3,7 @@
 source ./VERSION
 
 DEPS=( pwd rev cut 7z html2text )
-CLIENT_NAME=$BASE_NAME.zip
+CLIENT_NAME=$PACK_NAME.zip
 
 # Dependency check
 for dep in ${DEPS[@]}; do

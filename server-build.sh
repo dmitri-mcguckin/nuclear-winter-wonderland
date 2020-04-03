@@ -3,8 +3,8 @@
 source ./VERSION
 
 DEPS=( pwd rev cut tar wget )
-SERVER_NAME=$BASE_NAME-server.tar.gz
-MOD_DIR=$MC_HOME/$BASE_NAME/minecraft/mods
+SERVER_NAME=$PACK_NAME-server.tar.gz
+MOD_DIR=$MC_HOME/$PACK_NAME/minecraft/mods
 
 source ./res/SERVER-OPTIONS
 
@@ -12,7 +12,7 @@ if [[ -z $MC_HOME ]]; then
   echo -e "Evironment variable MC_HOME must be set in order to build the server!"
   exit -1
 elif [[ ! -d $MOD_DIR ]]; then
-  echo -e "Client version of the pack must be staged first before building server!"
+  echo -e "$MOD_DIR Client version of the pack must be staged first before building server!"
   exit -1
 fi
 
@@ -35,7 +35,7 @@ cp -r $MOD_DIR staging
 
 # Install forge
 FORGE_JAR="forge-$MC_VERSION-$FORGE_VERSION-installer.jar"
-FORGE_URL="$BASE_URL$MC_VERSION-$FORGE_VERSION/$FORGE_JAR"
+FORGE_URL="$FORGE_BASE_URL$MC_VERSION-$FORGE_VERSION/$FORGE_JAR"
 echo "Retrieving forge from resource: $FORGE_URL"
 wget $FORGE_URL
 mv $FORGE_JAR staging
@@ -45,6 +45,13 @@ java -jar $FORGE_JAR --installServer
 # Post-forge-install-cleanup
 rm $FORGE_JAR *.log
 cd ..
+
+# Install spongeforge
+source ./VERSION
+SPONGE_JAR="spongeforge-$MC_VERSION-$FORGE_VERSION-$SPONGE_VERSION.jar"
+SPONGE_URL="$SPONGE_BASE_URL$MC_VERSION-$FORGE_VERSION-$SPONGE_VERSION/$SPONGE_JAR"
+wget $SPONGE_URL
+mv $SPONGE_JAR staging/mods
 
 # Package
 tar -C staging -czvf $SERVER_NAME . >> /dev/null
