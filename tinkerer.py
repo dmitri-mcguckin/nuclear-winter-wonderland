@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, sys
-from pack_constructor.pack import Pack, Version, ForgeVersion, ATTRS
-from pack_constructor.mod import Mod
+from constructs.pack import Pack, Version, ForgeVersion, ATTRS
+from constructs.mod import Mod
 from ftf_utilities import log, Mode, load_json, dump_json
 
 def usage(msg):
