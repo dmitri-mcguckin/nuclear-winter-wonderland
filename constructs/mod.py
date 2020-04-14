@@ -15,4 +15,4 @@ class Mod:
     def __str__(self):
         if self.required: req = "REQUIRED"
         else: req = "OPTIONAL"
-        return self.name.ljust(60) + str("(pid: " + str(self.mod_id) + " | fid:" + str(self.file_id) + ")").ljust(27) + "\t[" + req + "]"
+        return self.name.ljust(48) + str("(pid: " + str(self.mod_id) + " | fid:" + str(self.file_id) + ")").ljust(28) + "[" + req + "]"

@@ -26,12 +26,6 @@
       "required": true
     },
     {
-      "fileID": 2626416,
-      "name": "TAIGA (Tinkers alloying addon) (by zkafaceTV)",
-      "projectID": 247661,
-      "required": true
-    },
-    {
       "fileID": 2828357,
       "name": "OpenComputers (by Sangar_)",
       "projectID": 223008,
@@ -110,12 +104,6 @@
       "required": true
     },
     {
-      "fileID": 2731543,
-      "name": "Tinkers Construct (by mDiyo)",
-      "projectID": 74072,
-      "required": true
-    },
-    {
       "fileID": 2713386,
       "name": "Mantle (by mDiyo)",
       "projectID": 74924,
@@ -152,12 +140,6 @@
       "required": true
     },
     {
-      "fileID": 2722271,
-      "name": "Extreme Reactors (by ZeroNoRyouki)",
-      "projectID": 250277,
-      "required": true
-    },
-    {
       "fileID": 2838090,
       "name": "CraftTweaker (by Jaredlll08)",
       "projectID": 239197,
@@ -179,12 +161,6 @@
       "fileID": 2835178,
       "name": "Mekanism Tools (by bradyaidanc)",
       "projectID": 268567,
-      "required": true
-    },
-    {
-      "fileID": 2718520,
-      "name": "Construct's Armory (by TheIllusiveC4)",
-      "projectID": 287683,
       "required": true
     },
     {
@@ -293,12 +269,6 @@
       "fileID": 2491032,
       "name": "AE2 Stuff (by bdew)",
       "projectID": 225194,
-      "required": true
-    },
-    {
-      "fileID": 2630860,
-      "name": "Tinkers' Tool Leveling (by bonusboni)",
-      "projectID": 250957,
       "required": true
     },
     {
@@ -458,12 +428,6 @@
       "required": true
     },
     {
-      "fileID": 2843439,
-      "name": "Tinkers' Complement",
-      "projectID": 272671,
-      "required": true
-    },
-    {
       "fileID": 2835644,
       "name": "Industrial Craft",
       "projectID": 242638,
@@ -518,12 +482,6 @@
       "required": true
     },
     {
-      "fileID": 2648656,
-      "name": "Akashic Tome",
-      "projectID": 250577,
-      "required": true
-    },
-    {
       "fileID": 2746011,
       "name": "AutoRegLib",
       "projectID": 250363,
@@ -572,12 +530,6 @@
       "required": true
     },
     {
-      "fileID": 2579934,
-      "name": "Moar Tinkers",
-      "projectID": 263624,
-      "required": true
-    },
-    {
       "fileID": 2920438,
       "name": "Thermal Foundation",
       "projectID": 69163,
@@ -611,6 +563,30 @@
       "fileID": 2775229,
       "name": "Ender Zoo",
       "projectID": 303001,
+      "required": true
+    },
+    {
+      "fileID": 2717691,
+      "name": "Techguns",
+      "projectID": 244201,
+      "required": true
+    },
+    {
+      "fileID": 2834651,
+      "name": "Steve's Carts Reborn",
+      "projectID": 253462,
+      "required": true
+    },
+    {
+      "fileID": 2687757,
+      "name": "Railcraft",
+      "projectID": 51195,
+      "required": true
+    },
+    {
+      "fileID": 2551739,
+      "name": "In-Game Wiki Mod",
+      "projectID": 223815,
       "required": true
     }
   ],

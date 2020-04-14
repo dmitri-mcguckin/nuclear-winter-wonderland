@@ -17,12 +17,14 @@ class ForgeVersion(Version):
         super().__init__(major, minor, patch)
         self.forge = forge
 
+    def bannerless_str(self):
+        return str(self.major) \
+                + "." + str(self.minor) \
+                + "." + str(self.patch) \
+                + "." + str(self.forge)
+
     def __str__(self):
-        return "forge-" \
-            + str(self.major) \
-            + "." + str(self.minor) \
-            + "." + str(self.patch) \
-            + "." + str(self.forge)
+        return "forge-" + self.bannerless_str()
 
 class Pack:
     def __init__(self, name, pack_version, mc_version, forge_version, author):
