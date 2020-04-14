@@ -56,12 +56,6 @@
       "required": true
     },
     {
-      "fileID": 2777929,
-      "name": "Storage Drawers",
-      "projectID": 223852,
-      "required": true
-    },
-    {
       "fileID": 2775231,
       "name": "Ender IO (by CrazyPants_MC)",
       "projectID": 64578,
@@ -182,12 +176,6 @@
       "required": true
     },
     {
-      "fileID": 2745545,
-      "name": "Project Red - Base",
-      "projectID": 228702,
-      "required": true
-    },
-    {
       "fileID": 2671230,
       "name": "stimmedcow : NoMoreRecipeConflict (by GotoLink)",
       "projectID": 238123,
@@ -293,12 +281,6 @@
       "fileID": 2745547,
       "name": "Project Red - Fabrication",
       "projectID": 230111,
-      "required": true
-    },
-    {
-      "fileID": 2745551,
-      "name": "Project Red - World",
-      "projectID": 229049,
       "required": true
     },
     {
