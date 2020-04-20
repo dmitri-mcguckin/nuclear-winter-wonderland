@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, zipfile
+import os, sys, zipfile, wget
 from constructs.pack import Pack, Version, ForgeVersion, ATTRS
 from constructs.mod import Mod
 from shutil import *
@@ -25,8 +25,7 @@ def load_mc_home():
                 os.putenv(env_name, mc_home)
                 break
             else: log(Mode.ERROR, 'Path does not exist: ' + str(mc_home))
-
-    log(Mode.WARN, 'To prevent this warning in the future, decalre the environment variable \'MC_HOME\' with the path th the top-level instances folder of your minecraft launcher.')
+        log(Mode.WARN, 'To prevent this warning in the future, decalre the environment variable \'MC_HOME\' with the path th the top-level instances folder of your minecraft launcher.')
     return os.path.expanduser(mc_home)
 
 def menu():
@@ -115,9 +114,10 @@ def load_manifest(filename):
     mc_version = parse_version(minecraft['version'])
     forge_version = parse_version(minecraft['modLoaders'][0]['id'][6:], forge= True)
     author = manifest['author']
+    sponge_version = manifest.get('sponge_version')
     mods = manifest['files']
 
-    pack = Pack(name, pack_version, mc_version, forge_version, author)
+    pack = Pack(name, pack_version, mc_version, forge_version, author, sponge_version = sponge_version)
 
     for raw_mod in mods:
         name = raw_mod.get('name')
@@ -131,9 +131,7 @@ def dump_manifest(pack, filename = None):
     dump_json(filename, pack.to_dict())
     log(Mode.INFO, 'Generated manifest at: ' + filename)
 
-def destroy_staging():
-    rmtree('build', ignore_errors = True)
-    rmtree('staging', ignore_errors = True)
+def destroy_staging(): rmtree('staging', ignore_errors = True)
 
 def regenerate_staging():
     os.makedirs('build', exist_ok = True)
@@ -148,30 +146,76 @@ def zip_directory(path, zipper):
             zipper.write(filename, arcname = arcname)
 
 def build_client(pack_name, manifest_path):
-    pack_zip = pack_name + '.zip'
+    pack_zip = pack_name + '.zip' # Pack zip path
+
+    # Install common files
     copyfile(manifest_path, 'staging/manifest.json')
     copytree('res/overrides', 'staging/overrides')
+
+    # Package the client
     zipper = zipfile.ZipFile(pack_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel = 9)
     zip_directory('staging', zipper)
     zipper.close()
     move(pack_zip, 'build')
 
-def build_server(pack, pack_name, manifest_path, client_build_path):
-    path = 'res/resources.properties'
-    file = open(path, 'r')
-    properties = file.read()
-    file.close()
+    destroy_staging() # Post-build cleanup
 
-    lines = properties.split('\n')
+def build_server(pack, pack_name, manifest_path, client_build_path, with_sponge = False):
+    pack_zip = pack_name + '-server.zip' # Pack zip path
+
+    # Update the server resource properties
+    res_prop_path = 'res/resources.properties'
+    res_prop_file = open(res_prop_path, 'r')
+    res_prop_data = res_prop_file.read()
+    res_prop_file.close()
+
+    f_lines = res_prop_data.split('\n')
     # lines[0] = lines[0] # Currently no need to regenerate this part
-    lines[1] = 'export MC_VERSION=' + str(pack.mc_version)
-    lines[2] = 'export FORGE_VERSION=' + pack.forge_version.bannerless_str()
-    properties = '\n'.join(lines)
+    f_lines[1] = 'export MC_VERSION=' + str(pack.mc_version)
+    f_lines[2] = 'export FORGE_VERSION=' + pack.forge_version.bannerless_str()
+    res_prop_data = '\n'.join(f_lines)
 
-    file = open(path, 'w+')
-    log(Mode.DEBUG, 'Properties:\n' + str(properties))
-    file.write(str(properties))
-    file.close()
+    res_prop_file = open(res_prop_path, 'w+')
+    res_prop_file.write(str(res_prop_data))
+    res_prop_file.close()
+
+    # Install common files
+    mod_path = client_build_path + os.sep + 'minecraft' + os.sep + 'mods'
+    copyfile(manifest_path, 'staging/manifest.json')
+    copytree('res/overrides', 'staging/config')
+    copytree(mod_path, 'staging/mods')
+    copyfile('res/server.properties', 'staging/server.properties')
+    copyfile('res/resources.properties', 'staging/resources.properties')
+
+    # Install forge
+    forge_jar = 'forge-' + str(pack.mc_version) + '-' + pack.forge_version.bannerless_str() + '-installer.jar'
+    forge_remote = 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/' + str(pack.mc_version) + '-' + pack.forge_version.bannerless_str() + os.sep + forge_jar
+    forge_local = wget.download(forge_remote)
+    move(forge_local, 'staging/' + forge_local)
+    os.chdir('./staging')
+    os.system('java -jar ' + forge_local + ' --installServer')
+
+    # Post-forge cleanup
+    os.remove(forge_local)
+    os.chdir('..')
+
+    # Install spongeforge
+    if(with_sponge and pack.sponge_version is not None):
+        log(Mode.INFO, "Including sponge in the build!")
+        sponge_jar = 'spongeforge-' + str(pack.mc_version) + '-' + str(pack.forge_version.forge) + '-' + str(pack.sponge_version) + '.jar'
+        sponge_remote = 'https://repo.spongepowered.org/maven/org/spongepowered/spongeforge/' + str(pack.mc_version) + '-' + str(pack.forge_version.forge) + '-' + str(pack.sponge_version) + os.sep + sponge_jar
+        log(Mode.DEBUG, "Getting sponge: " + str(sponge_remote))
+        sponge_local = wget.download(sponge_remote)
+        move(sponge_local, 'staging/mods/' + sponge_local)
+    else: log(Mode.WARN, 'Skipping optional sponge install!')
+
+    # Package the client
+    zipper = zipfile.ZipFile(pack_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel = 9)
+    zip_directory('staging', zipper)
+    zipper.close()
+    move(pack_zip, 'build')
+
+    destroy_staging() # Post-build cleanup
 
 def main(args):
     save_on_exit = False
@@ -254,10 +298,13 @@ def main(args):
             elif(attr == 'server'):
                 client_build_path = mc_home + os.sep + server_name
 
+                if('sponge' in args): with_sponge = True
+                else: with_sponge = False
+
                 if(not os.path.exists(client_build_path)):
                     log(Mode.ERROR, 'Client instance expected but not found at: ' + client_build_path)
                     continue
-                build_server(pack, server_name, manifest_in, client_build_path)
+                build_server(pack, server_name, manifest_in, client_build_path, with_sponge = with_sponge)
             else:
                 log(Mode.ERROR, 'Unrecognized build command: ' + attr)
                 continue

@@ -585,5 +585,6 @@
   },
   "name": "Nuclear Winter Wonderland",
   "overrides": "overrides",
+  "sponge_version": "7.2.0",
   "version": "3.3.0"
 }

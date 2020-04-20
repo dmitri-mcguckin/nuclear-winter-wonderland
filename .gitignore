@@ -1,6 +1,9 @@
 ./build
 **/build
 
+./staging
+**/staging
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

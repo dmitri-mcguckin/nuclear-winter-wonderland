@@ -27,12 +27,13 @@ class ForgeVersion(Version):
         return "forge-" + self.bannerless_str()
 
 class Pack:
-    def __init__(self, name, pack_version, mc_version, forge_version, author):
+    def __init__(self, name, pack_version, mc_version, forge_version, author, sponge_version = None):
         self.name = name
         self.pack_version = pack_version
         self.mc_version = mc_version
         self.forge_version = forge_version
         self.author = author
+        self.sponge_version = sponge_version
         self.mods = []
 
     def add(self, mod): self.mods.append(mod)
@@ -48,6 +49,9 @@ class Pack:
         return []
 
     def to_dict(self):
+        if(self.sponge_version is not None): sv = str(self.sponge_version)
+        else: sv = self.sponge_version
+
         res = { "minecraft": {
                     "version": str(self.mc_version),
                     "modLoaders": [ { "id": str(self.forge_version), "primary": True } ]
@@ -57,6 +61,7 @@ class Pack:
             "name": self.name,
             "version": str(self.pack_version),
             "author": self.author,
+            "sponge_version": sv,
             "files": [],
             "overrides": "overrides" }
 
