@@ -142,28 +142,34 @@ def zip_directory(path, zipper):
         for file in files:
             filename = os.path.join(root, file)
             arcname = '/'.join(filename.split('/')[1:])
-            log(Mode.DEBUG, 'Packaging: ' + arcname)
             zipper.write(filename, arcname = arcname)
 
 def build_client(pack_name, manifest_path):
+    log(Mode.INFO, "Starting client build...")
     pack_zip = pack_name + '.zip' # Pack zip path
 
     # Install common files
+    log(Mode.INFO, "Installing common files...")
     copyfile(manifest_path, 'staging/manifest.json')
     copytree('res/overrides', 'staging/overrides')
 
     # Package the client
+    log(Mode.INFO, "Packaging staged files...")
     zipper = zipfile.ZipFile(pack_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel = 9)
     zip_directory('staging', zipper)
     zipper.close()
     move(pack_zip, 'build')
 
-    destroy_staging() # Post-build cleanup
+    # Post-build cleanup/info
+    destroy_staging()
+    log(Mode.INFO, "Build completed!\n\tClient zip generated at: build/" + pack_zip)
 
 def build_server(pack, pack_name, manifest_path, client_build_path, with_sponge = False):
+    log(Mode.INFO, "Starting server build...")
     pack_zip = pack_name + '-server.zip' # Pack zip path
 
     # Update the server resource properties
+    log(Mode.INFO, "Updating server resource metadata...")
     res_prop_path = 'res/resources.properties'
     res_prop_file = open(res_prop_path, 'r')
     res_prop_data = res_prop_file.read()
@@ -180,14 +186,17 @@ def build_server(pack, pack_name, manifest_path, client_build_path, with_sponge 
     res_prop_file.close()
 
     # Install common files
+    log(Mode.INFO, "Installing common files...")
     mod_path = client_build_path + os.sep + 'minecraft' + os.sep + 'mods'
     copyfile(manifest_path, 'staging/manifest.json')
+    copyfile('res/start.sh', 'staging/start.sh')
     copytree('res/overrides', 'staging/config')
     copytree(mod_path, 'staging/mods')
     copyfile('res/server.properties', 'staging/server.properties')
     copyfile('res/resources.properties', 'staging/resources.properties')
 
     # Install forge
+    log(Mode.INFO, "Installing forge v" + pack.forge_version.bannerless_str() + "...")
     forge_jar = 'forge-' + str(pack.mc_version) + '-' + pack.forge_version.bannerless_str() + '-installer.jar'
     forge_remote = 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/' + str(pack.mc_version) + '-' + pack.forge_version.bannerless_str() + os.sep + forge_jar
     forge_local = wget.download(forge_remote)
@@ -196,26 +205,29 @@ def build_server(pack, pack_name, manifest_path, client_build_path, with_sponge 
     os.system('java -jar ' + forge_local + ' --installServer')
 
     # Post-forge cleanup
+    log(Mode.INFO, "Cleaning up forge install...")
     os.remove(forge_local)
     os.chdir('..')
 
     # Install spongeforge
     if(with_sponge and pack.sponge_version is not None):
-        log(Mode.INFO, "Including sponge in the build!")
+        log(Mode.INFO, "Fetching spongeforge!")
         sponge_jar = 'spongeforge-' + str(pack.mc_version) + '-' + str(pack.forge_version.forge) + '-' + str(pack.sponge_version) + '.jar'
         sponge_remote = 'https://repo.spongepowered.org/maven/org/spongepowered/spongeforge/' + str(pack.mc_version) + '-' + str(pack.forge_version.forge) + '-' + str(pack.sponge_version) + os.sep + sponge_jar
-        log(Mode.DEBUG, "Getting sponge: " + str(sponge_remote))
         sponge_local = wget.download(sponge_remote)
         move(sponge_local, 'staging/mods/' + sponge_local)
-    else: log(Mode.WARN, 'Skipping optional sponge install!')
+    else: log(Mode.WARN, 'Skipping optional spongeforge install!\n\t(If you would like spongeforge to auto-install, run \'build server sponge\')')
 
     # Package the client
+    log(Mode.INFO, "Packaging staged files...")
     zipper = zipfile.ZipFile(pack_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel = 9)
     zip_directory('staging', zipper)
     zipper.close()
     move(pack_zip, 'build')
 
-    destroy_staging() # Post-build cleanup
+    # Post-build cleanup/info
+    destroy_staging()
+    log(Mode.INFO, "Build completed!\n\tServer zip generated at: build/" + pack_zip)
 
 def main(args):
     save_on_exit = False
