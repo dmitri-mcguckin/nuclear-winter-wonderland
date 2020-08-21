@@ -40,7 +40,7 @@ class PopupWindow:
         window.attroff(style)
 
         window.refresh()
-        parent.refresh()
+        # parent.refresh()
 
         window.getch()
         curses.flushinp()
@@ -55,8 +55,8 @@ class SelectionWindow:
         long = len(banner)
 
         for m in options:
-            if(len(m) > long):
-                long = len(m)
+            if(len(str(m)) > long):
+                long = len(str(m))
         if(long < len(banner)):
             long = len(banner)
 
@@ -82,7 +82,7 @@ class SelectionWindow:
             self.window.addstr(0, 1, self.banner)
 
             for i, option in enumerate(self.options):
-                option = option.split('.')[0].replace('-', ' ').title()
+                option = str(option).split('.')[0].replace('-', ' ').title()
                 if(i == self.selection):
                     self.window.attron(curses.A_REVERSE)
                 self.window.addstr(i + 1, 1, '{}.) {}'.format(i + 1, option))
@@ -162,10 +162,11 @@ class InputWindow:
             return None
 
 
-class ModPackInfoPane:
-    def __init__(self, parent):
+class PackInfoPane:
+    def __init__(self, parent, pack: modpack.ModPack):
         self.parent = parent
         self.window = curses.newpad(1, 1)
+        self.pack = pack
         self.selected = True
         self.scroll_pos = 0
         self.resize()
@@ -178,8 +179,8 @@ class ModPackInfoPane:
 
         self.height = int(pheight / 2) - 1
         self.width = int(pwidth / 3) - 1
-        self.x_offset = px_off + 1
-        self.y_offset = py_off + 1
+        self.x_offset = 1
+        self.y_offset = 1
 
         self.window.resize(self.height, self.width)
         self.window.clear()
@@ -195,9 +196,10 @@ class ModPackInfoPane:
         entries = [
             pack.name,
             '\tBy: {}'.format(pack.author),
-            '\tPack Version: v{}'.format(pack.pack_version),
-            '\tMC Version: v{}'.format(pack.mc_version),
-            '\tSponge Version: v{}'.format(pack.sponge_version)
+            '\tPack Version: {}'.format(pack.pack_version),
+            '\tMC Version: {}'.format(pack.mc_version),
+            '\tForge Version: {}'.format(pack.forge_version.long()),
+            '\tSponge Version: {}'.format(pack.sponge_version)
         ]
 
         for i, e in enumerate(entries):
@@ -219,19 +221,74 @@ class ModPackInfoPane:
         elif(key == curses.KEY_DOWN):
             self.scroll_pos += 1
         elif(key == 10):
-            input = InputWindow(self.window, banner='Edit Pack: Name', color_pair=2)
-            new_name = input.start()
-
+            self.modify_pack()
         if(self.scroll_pos < 0):
             self.scroll_pos = 0
-        elif(self.scroll_pos > 4):
-            self.scroll_pos = 4
+        elif(self.scroll_pos > 5):
+            self.scroll_pos = 5
+
+    def modify_pack(self):
+        if(self.scroll_pos == 0):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: Name',
+                                color_pair=2)
+            new_name = input.start()
+            self.pack.name = new_name
+        elif(self.scroll_pos == 1):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: Author',
+                                color_pair=2)
+            new_author = input.start()
+            self.pack.author = new_author
+        elif(self.scroll_pos == 2):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: Version',
+                                color_pair=2)
+            new_pack_version = input.start()
+            self.pack.pack_version = modpack.Version.to_version(new_pack_version)
+        elif(self.scroll_pos == 3):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: MC Version',
+                                color_pair=2)
+            new_mc_version = input.start()
+            self.pack.mc_version = modpack.Version.to_version(new_mc_version)
+        elif(self.scroll_pos == 4):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: Forge Version',
+                                color_pair=2)
+            new_forge_version = input.start()
+            if(new_forge_version != '' and new_forge_version is not None):
+                self.pack.forge_version = modpack \
+                                            .ForgeVersion \
+                                            .to_version('forge-' + new_forge_version)
+            else:
+                PopupWindow(self.window, 'Forge version is required!')
+        elif(self.scroll_pos == 5):
+            input = InputWindow(self.window,
+                                banner='Edit Pack: Sponge Version',
+                                color_pair=2)
+            new_sponge_version = input.start()
+            if(new_sponge_version != '' and new_sponge_version is not None):
+                self.pack.sponge_version = modpack \
+                                            .Version \
+                                            .to_version(new_sponge_version)
+            else:
+                self.pack.sponge_version = None
+        self.resize()
 
 
 class ModInfoPane:
-    def __init__(self, parent):
+    def __init__(self, parent, pack: modpack.ModPack):
+        # Curses window things
         self.parent = parent
         self.window = curses.newpad(1, 1)
+
+        # UI + Input things
+        self.pack = pack
+        self.selected = False
+        self.scroll_pos = 0
+
+        # Reform the UI
         self.resize()
 
     def resize(self):
@@ -242,7 +299,7 @@ class ModInfoPane:
 
         self.height = int(pheight / 2) + 2
         self.width = int(pwidth / 3) - 1
-        self.x_offset = px_off + 1
+        self.x_offset = 1
         self.y_offset = py_off + + int(pheight / 2)
 
         self.window.resize(self.height, self.width)
@@ -251,24 +308,25 @@ class ModInfoPane:
     def draw(self, mod: mod.Mod):
         self.window.clear()
         self.window.box()
-        self.window.addstr(0, 1, "Mod Details:")
+
+        if(self.selected):
+            self.window.attron(curses.A_REVERSE)
+        self.window.addstr(0, 1, 'Mod Details:')
+        self.window.attroff(curses.A_REVERSE)
 
         if(mod is not None):
-            self.window.addstr(2, 2, mod.name)
-            self.window.addstr(3, 2, '\tProject ID:'
-                                     .ljust(13, ' ')
-                                     + str(mod.project_id))
-            self.window.addstr(4, 2, '\tFile ID:'
-                                     .ljust(13, ' ')
-                                     + str(mod.file_id))
+            entries = [
+                mod.name,
+                '\tProject ID:'.ljust(15, ' ') + str(mod.project_id),
+                '\tFile ID:'.ljust(15, ' ') + str(mod.file_id),
+                '\tRequired:'.ljust(15, ' ') + str(mod.required),
+            ]
 
-            if(mod.required):
-                self.window.attron(curses.A_REVERSE)
-                self.window.addstr(6,
-                                   2,
-                                   '[REQUIRED MOD]',
-                                   curses.color_pair(3))
-            self.window.attroff(curses.A_REVERSE)
+            for i, e in enumerate(entries):
+                if(self.selected and i == self.scroll_pos):
+                    self.window.attron(curses.A_REVERSE)
+                self.window.addstr(2 + i, 2, e)
+                self.window.attroff(curses.A_REVERSE)
 
         self.window.refresh(0,
                             0,
@@ -277,13 +335,55 @@ class ModInfoPane:
                             self.height + self.y_offset,
                             self.width + self.x_offset)
 
+    def read_input(self, key, hovered_mod: mod.Mod):
+        # Check user input
+        if(key == curses.KEY_UP):
+            self.scroll_pos -= 1
+        elif(key == curses.KEY_DOWN):
+            self.scroll_pos += 1
+        elif(key == 10):
+            self.modify_mod(hovered_mod)
 
-class ModsPane:
-    def __init__(self, parent, mods):
+        # Bounds checking
+        if(self.scroll_pos < 0):
+            self.scroll_pos = 0
+        elif(self.scroll_pos > 3):
+            self.scroll_pos = 3
+
+    def modify_mod(self, hovered_mod: mod.Mod):
+        if(self.scroll_pos == 0):
+            input = InputWindow(self.window,
+                                banner='Edit Mod: Name',
+                                color_pair=2)
+            new_name = input.start()
+            hovered_mod.name = new_name
+        elif(self.scroll_pos == 1):
+            input = InputWindow(self.window,
+                                banner='Edit Mod: Project ID',
+                                color_pair=2)
+            new_project_id = int(input.start(InputWindow.is_numeric))
+            hovered_mod.project_id = new_project_id
+        elif(self.scroll_pos == 2):
+            input = InputWindow(self.window,
+                                banner='Edit Mod: File ID',
+                                color_pair=2)
+            new_file_id = int(input.start(InputWindow.is_numeric))
+            hovered_mod.file_id = new_file_id
+        elif(self.scroll_pos == 3):
+            input = SelectionWindow(self.window,
+                                    [True, False],
+                                    banner='Required?')
+            required = input.start()
+            hovered_mod.required = required
+        self.resize()
+
+
+class ModListPane:
+    def __init__(self, parent, pack: modpack.ModPack):
         self.parent = parent
         self.window = curses.newpad(1, 1)
         self.window.scrollok(True)
-        self.mods = mods
+        self.pack = pack
         self.selected = False
         self.scroll_position = 0
         self.resize()
@@ -298,8 +398,8 @@ class ModsPane:
         # Do Scroll bounds checking
         if(self.scroll_position < 0):
             self.scroll_position = 0
-        elif(self.scroll_position > len(self.mods) - 1):
-            self.scroll_position = len(self.mods) - 1
+        elif(self.scroll_position > len(self.pack.mods) - 1):
+            self.scroll_position = len(self.pack.mods) - 1
 
     def resize(self):
         py_off, px_off = self.parent.getyx()
@@ -314,10 +414,10 @@ class ModsPane:
 
         pad_width = self.width
 
-        if(len(self.mods) < self.height):
+        if(len(self.pack.mods) < self.height):
             pad_height = self.height
         else:
-            pad_height = len(self.mods) + 1
+            pad_height = len(self.pack.mods) + 1
 
         self.window.resize(pad_height, pad_width)
         self.window.clear()
@@ -327,18 +427,18 @@ class ModsPane:
 
         if(self.selected):
             self.window.attron(curses.A_REVERSE)
-        self.window.addstr(0, 1, 'Mods ({})'.format(len(self.mods)))
+        self.window.addstr(0, 1, 'Mods ({})'.format(len(self.pack.mods)))
         self.window.attroff(curses.A_REVERSE)
 
-        for i, m in enumerate(self.mods):
+        for i, m in enumerate(self.pack.mods):
             if(self.selected and i == self.scroll_position):
                 self.window.attron(curses.A_REVERSE)
             self.window.addstr(i + 1,  1, m.name)
             self.window.attroff(curses.A_REVERSE)
 
         scroll_offset = self.scroll_position
-        if(self.scroll_position + (self.height - 1) > len(self.mods)):
-            scroll_offset = len(self.mods) - (self.height - 1)
+        if(self.scroll_position + (self.height - 1) > len(self.pack.mods)):
+            scroll_offset = len(self.pack.mods) - (self.height - 1)
 
         self.window.refresh(scroll_offset,
                             0,
@@ -348,13 +448,10 @@ class ModsPane:
                             self.width)
 
     def hovered_mod(self):
-        if(len(self.mods) > 0):
-            return self.mods[self.scroll_position]
+        if(len(self.pack.mods) > 0):
+            return self.pack.mods[self.scroll_position]
         else:
             return None
-
-    def remove_selected(self):
-        self.mods.remove(self.hovered_mod())
 
 
 class TinkererApp:
@@ -401,9 +498,9 @@ class TinkererApp:
         self.config_filename = selection_window.start()
         self.modpack = TinkererApp.load_config(self.config_filename)
 
-        self.mod_pack_info_pane = ModPackInfoPane(self.screen)
-        self.mod_info_pane = ModInfoPane(self.screen)
-        self.mods_pane = ModsPane(self.screen, self.modpack.sorted_mods())
+        self.pack_info_pane = PackInfoPane(self.screen, self.modpack)
+        self.mod_info_pane = ModInfoPane(self.screen, self.modpack)
+        self.mod_list_pane = ModListPane(self.screen, self.modpack)
 
         while self.running:
             # Determine banner stuff
@@ -422,9 +519,9 @@ class TinkererApp:
 
             # Refresh
             self.screen.refresh()
-            self.mod_pack_info_pane.draw(self.modpack)
-            self.mods_pane.draw()
-            self.mod_info_pane.draw(self.mods_pane.hovered_mod())
+            self.pack_info_pane.draw(self.modpack)
+            self.mod_list_pane.draw()
+            self.mod_info_pane.draw(self.mod_list_pane.hovered_mod())
             time.sleep(0.1)
         self.stop()
 
@@ -443,15 +540,14 @@ class TinkererApp:
         # Determine the key input
         if(key == curses.KEY_RESIZE):
             pheight, pwidth = self.screen.getmaxyx()
-            self.screen.resize(pheight, pwidth)
             self.screen.clear()
-            self.mod_pack_info_pane.resize()
+            self.pack_info_pane.resize()
             self.mod_info_pane.resize()
-            self.mods_pane.resize()
-        elif(key == curses.KEY_SLEFT):
+            self.mod_list_pane.resize()
+        elif(key == curses.KEY_SR or key == curses.KEY_SLEFT):
             self.selected_pane -= 1
             self.update_selected_panel()
-        elif(key == curses.KEY_SRIGHT):
+        elif(key == curses.KEY_SF or key == curses.KEY_SRIGHT):
             self.selected_pane += 1
             self.update_selected_panel()
         elif(key == curses.KEY_F1):
@@ -464,119 +560,67 @@ class TinkererApp:
                         banner='About ' + tinkerer.APP_NAME,
                         color_pair=1)
         elif(key == curses.KEY_F2):
-            PopupWindow(self.screen, "<Ctrl+C>: Exit program\
+            PopupWindow(self.screen, "<Ctrl+C>: Exit without saving\
+                                     \n<S>: Save and exit\
                                      \n\nInfo:\
                                      \n\t<F1>: About\
                                      \n\t<F2>: Controls\
                                      \n\nMovement:\
+                                     \n\t<ENTER>: Edit selected field\
                                      \n\t<UP>: Scroll up\
-                                     \n\t<DOWN>: Scroll down",
+                                     \n\t<DOWN>: Scroll down\
+                                     \n\t<Shift+UP/Shift+LEFT>: Select previous pane\
+                                     \n\t<Shift+DOWN/Shift+RIGHT>: Select next pane",
                         banner='Controls',
                         color_pair=1)
-        elif(key == curses.KEY_F3):
-            input = SelectionWindow(self.screen,
-                                    ['Mod from Registry', 'New mod'],
-                                    banner='How would you like ot add a mod?')
-            method = input.start()
-            method = {
-                'Mod from Registry': 0,
-                'New mod': 1
-            }[method]
-            if(method == 0):
-                return
-            else:
-                new_mod = self.create_new_mod()
-            self.modpack.add(new_mod)
-            self.mods_pane.mods.append(new_mod)
-            self.mods_pane.resize()
-        elif(key == curses.KEY_F4):
-            selected_mod = self.mods_pane.hovered_mod()
-            if(selected_mod is not None):
-                self.modpack.remove(selected_mod)
-                self.mods_pane.remove_selected()
-                self.mods_pane.resize()
-        elif(key == curses.KEY_F5):
-            input_window = InputWindow(self.screen,
-                                       banner='Edit Name:',
-                                       color_pair=2)
-            selected_mod = self.mods_pane.hovered_mod()
-            new_name = input_window.start()
-            selected_mod.name = new_name
-            self.mods_pane.resize()
-        elif(key == curses.KEY_F6):
-            input_window = InputWindow(self.screen,
-                                       banner='Edit Project ID:',
-                                       color_pair=2)
-            selected_mod = self.mods_pane.hovered_mod()
-            new_project_id = int(input_window
-                                 .start(validator=InputWindow.is_numeric))
-            selected_mod.project_id = new_project_id
-        elif(key == curses.KEY_F7):
-            input_window = InputWindow(self.screen,
-                                       banner='Edit File ID:',
-                                       color_pair=2)
-            selected_mod = self.mods_pane.hovered_mod()
-            new_file_id = int(input_window
-                              .start(validator=InputWindow.is_numeric))
-            selected_mod.file_id = new_file_id
-        elif(key == curses.KEY_F8):
-            input_window = SelectionWindow(self.screen,
-                                           ['true', 'false'],
-                                           banner='Required?',
-                                           color_pair=2)
-            selected_mod = self.mods_pane.hovered_mod()
-            required = input_window.start()
-            required = {
-                'true': True,
-                'false': False
-            }[required]
-            selected_mod.required = required
-        elif(key == ord('c')):
+        elif(key == ord('s') or key == ord('S')):
             self.save_config()
         if(self.selected_pane == 0):
-            self.mod_pack_info_pane.read_input(key)
-        else:
-            self.mods_pane.read_input(key)
+            self.pack_info_pane.read_input(key)
+        elif(self.selected_pane == 1):
+            self.mod_info_pane.read_input(key, self.mod_list_pane.hovered_mod())
+        elif(self.selected_pane == 2):
+            self.mod_list_pane.read_input(key)
 
     def update_selected_panel(self):
         if(self.selected_pane < 0):
             self.selected_pane = 0
-        elif(self.selected_pane >= 2):
-            self.selected_pane = 1
+        elif(self.selected_pane > 2):
+            self.selected_pane = 2
+
+        self.mod_list_pane.selected = False
+        self.mod_info_pane.selected = False
+        self.pack_info_pane.selected = False
 
         if(self.selected_pane == 0):
-            self.mods_pane.selected = False
-            self.mod_pack_info_pane.selected = True
-        else:
-            self.mods_pane.selected = True
-            self.mod_pack_info_pane.selected = False
-        self.mods_pane.resize()
-        self.mod_pack_info_pane.resize()
+            self.pack_info_pane.selected = True
+        elif(self.selected_pane == 1):
+            self.mod_info_pane.selected = True
+        elif(self.selected_pane == 2):
+            self.mod_list_pane.selected = True
+
+        self.mod_list_pane.resize()
+        self.mod_info_pane.resize()
+        self.pack_info_pane.resize()
 
     def create_new_mod(self) -> mod.Mod:
         input_window = InputWindow(self.screen,
-                                   banner='New Mod: Mod Name',
+                                   banner='New Mod: Name',
                                    color_pair=2)
         name = input_window.start()
         input_window = InputWindow(self.screen,
                                    banner='New Mod: Project ID',
                                    color_pair=2)
-        project_id = int(input_window
-                         .start(validator=InputWindow.is_numeric))
+        project_id = int(input_window.start(validator=InputWindow.is_numeric))
         input_window = InputWindow(self.screen,
                                    banner='New Mod: File ID',
                                    color_pair=2)
-        file_id = int(input_window
-                      .start(validator=InputWindow.is_numeric))
+        file_id = int(input_window.start(validator=InputWindow.is_numeric))
         input_window = SelectionWindow(self.screen,
-                                       ['true', 'false'],
+                                       [True, False],
                                        banner='New Mod: Required?:',
                                        color_pair=2)
         required = input_window.start()
-        required = {
-            'true': True,
-            'false': False
-        }[required]
         return mod.Mod(name, project_id, file_id, required)
 
     def fetch_configs() -> [str]:
