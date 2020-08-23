@@ -34,11 +34,11 @@ An MC Modpack builder, an alternative to both the twitch client pack editor and 
 
 **For Current User:**
 
-`$` `python -m pip install dist/tinkerer*.whl`
+`$` `python -m pip install dist/*.whl`
 
 **For All Users:**
 
-`$` `sudo python -m pip install dist/tinkerer*.whl`
+`$` `sudo python -m pip install dist/*.whl`
 
 ***
 
