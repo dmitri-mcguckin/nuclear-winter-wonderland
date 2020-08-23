@@ -552,7 +552,7 @@ class TinkererApp:
             self.update_selected_panel()
         elif(key == curses.KEY_F1):
             window_message = '\n'.join(['Author: ' + tinkerer.APP_AUTHOR,
-                                        'Website: ' + tinkerer.APP_WEBSITE,
+                                        'Website: ' + tinkerer.APP_URL,
                                         'License: ' + tinkerer.APP_LICENSE,
                                         'Version: ' + tinkerer.APP_VERSION])
             PopupWindow(self.screen,

@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
 import sys
 import argparse
 import tinkerer
-import tinkerer.app as tapp
+import tinkerer.tinkerer_app as tapp
 
 
 def main(args):
     parser = argparse.ArgumentParser(
-                        prog='app-tinkerer',
-                        description='A tinkering program for MC packs.',
+                        prog=tinkerer.APP_NAME,
+                        description=tinkerer.APP_DESCRIPTION,
                         allow_abbrev=False)
     parser.add_argument('-v', '--verbose',
                         dest='debug',
