@@ -22,7 +22,7 @@ class ModInfoPane:
             'error: no project id available',
             'error: no file id available',
             'error: no required flag available',
-            '\t[REMOVE]'
+            '\t[ Remove Mod ]'
         ]
 
         # Reform the UI
@@ -74,8 +74,8 @@ class ModInfoPane:
                             self.height + self.y_offset,
                             self.width + self.x_offset)
 
-    def read_input(self, key, hovered_mod: mod.Mod) -> bool:
-        did_remove = False
+    def read_input(self, key, hovered_mod: mod.Mod) -> int:
+        action = 0
 
         # Check user input
         if(key == curses.KEY_UP):
@@ -86,65 +86,81 @@ class ModInfoPane:
             if(hovered_mod is None):
                 PopupWindow(self.parent, 'No mod to edit!')
             else:
-                did_remove = self.modify_mod(hovered_mod)
+                action = self.modify_mod(hovered_mod)
 
         # Bounds checking
         if(self.scroll_pos < 0):
             self.scroll_pos = 0
         elif(self.scroll_pos >= len(self.entries)):
             self.scroll_pos = len(self.entries) - 1
-        return did_remove
+        return action
 
-    def modify_mod(self, hovered_mod: mod.Mod) -> bool:
-        did_remove = False
+    def modify_mod(self, hovered_mod: mod.Mod) -> int:
+        action = 0
 
         if(self.scroll_pos == 0):
-            self.edit_name(hovered_mod)
+            success = self.edit_name(hovered_mod)
         elif(self.scroll_pos == 1):
-            self.edit_project_id(hovered_mod)
+            success = self.edit_project_id(hovered_mod)
         elif(self.scroll_pos == 2):
-            self.edit_file_id(hovered_mod)
+            success = self.edit_file_id(hovered_mod)
         elif(self.scroll_pos == 3):
-            self.edit_required(hovered_mod)
+            success = self.edit_required(hovered_mod)
         elif(self.scroll_pos == (len(self.entries) - 1)):
             self.pack.remove(hovered_mod)
-            did_remove = True
-        self.resize()
-        return did_remove
+            success = True
+            action = 2
 
-    def edit_name(self, hovered_mod: mod.Mod):
+        if(success and action != 2):
+            action = 1
+
+        self.resize()
+        return action
+
+    def edit_name(self, hovered_mod: mod.Mod) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Mod: Name',
                             color_pair=2)
         new_name = input.start()
         if(new_name != ''):
             hovered_mod.name = new_name
+            success = True
         else:
             PopupWindow(self.parent, 'Name cannot be empty!')
+        return success
 
-    def edit_project_id(self, hovered_mod: mod.Mod):
+    def edit_project_id(self, hovered_mod: mod.Mod) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Mod: Project ID',
                             color_pair=2)
         try:
             new_project_id = int(input.start(InputWindow.is_numeric))
             hovered_mod.project_id = new_project_id
+            success = True
         except Exception:
             PopupWindow(self.parent, 'Project id cannot be empty!')
+        return success
 
-    def edit_file_id(self, hovered_mod: mod.Mod):
+    def edit_file_id(self, hovered_mod: mod.Mod) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Mod: File ID',
                             color_pair=2)
         try:
             new_file_id = int(input.start(InputWindow.is_numeric))
             hovered_mod.file_id = new_file_id
+            success = True
         except Exception:
             PopupWindow(self.parent, 'File id cannot be empty!')
+        return success
 
-    def edit_required(self, hovered_mod: mod.Mod):
+    def edit_required(self, hovered_mod: mod.Mod) -> bool:
+        prev_state = hovered_mod.required
         input = SelectionWindow(self.parent,
                                 [True, False],
                                 banner='Required?')
         required = input.start()
         hovered_mod.required = required
+        return hovered_mod.required != prev_state

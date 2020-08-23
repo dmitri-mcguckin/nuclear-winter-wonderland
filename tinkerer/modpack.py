@@ -30,9 +30,11 @@ class ForgeVersion(Version):
     def short(self) -> str:
         return super().__str__()
 
+    def medium(self):
+        return "{}.{}".format(super().__str__(), self.forge)
+
     def long(self):
-        return "forge-{}.{}".format(super().__str__(),
-                                    self.forge)
+        return "forge-{}.{}".format(super().__str__(), self.forge)
 
     def __eq__(self, ver):
         return super().__eq__(ver) and self.forge == ver.forge
@@ -78,6 +80,9 @@ class ModPack:
                 and (self.pack_version == pack.pack_version) \
                 and (self.mc_version == pack.mc_version) \
                 and (self.forge_version == pack.forge_version)
+
+    def __getitem__(self, index):
+        return self.sorted_mods()[index]
 
     def sorted_mods(self) -> [mod.Mod]:
         if(len(self.mods) > 0):

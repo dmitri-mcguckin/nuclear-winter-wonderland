@@ -57,54 +57,70 @@ class PackInfoPane:
                             self.height + self.y_offset,
                             self.width + self.x_offset)
 
-    def read_input(self, key):
+    def read_input(self, key) -> int:
+        action = 0
+
         if(key == curses.KEY_UP):
             self.scroll_pos -= 1
         elif(key == curses.KEY_DOWN):
             self.scroll_pos += 1
         elif(key == 10):
-            self.modify_pack()
+            action = self.modify_pack()
         if(self.scroll_pos < 0):
             self.scroll_pos = 0
         elif(self.scroll_pos > 5):
             self.scroll_pos = 5
 
-    def modify_pack(self):
+        return action
+
+    def modify_pack(self) -> int:
         if(self.scroll_pos == 0):
-            self.edit_name()
+            success = self.edit_name()
         elif(self.scroll_pos == 1):
-            self.edit_author()
+            success = self.edit_author()
         elif(self.scroll_pos == 2):
-            self.edit_pack_version()
+            success = self.edit_pack_version()
         elif(self.scroll_pos == 3):
-            self.edit_mc_version()
+            success = self.edit_mc_version()
         elif(self.scroll_pos == 4):
-            self.edit_forge_version()
+            success = self.edit_forge_version()
         elif(self.scroll_pos == 5):
-            self.edit_sponge_version()
+            success = self.edit_sponge_version()
         self.resize()
 
-    def edit_name(self):
+        return {
+            False: 0,
+            True: 1
+        }[success]
+
+    def edit_name(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: Name',
                             color_pair=2)
         new_name = input.start()
         if(new_name != ''):
             self.pack.name = new_name
+            success = True
         else:
             PopupWindow(self.parent, 'Name cannot be empty!')
+        return success
 
-    def edit_author(self):
+    def edit_author(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: Author',
                             color_pair=2)
         new_author = input.start()
         if(new_author != ''):
             self.pack.author = new_author
+            success = True
         else:
             PopupWindow(self.parent, 'Author cannot be empty!')
+        return success
 
-    def edit_pack_version(self):
+    def edit_pack_version(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: Version',
                             color_pair=2)
@@ -112,20 +128,26 @@ class PackInfoPane:
         try:
             self.pack.pack_version = modpack.Version \
                                             .to_version(new_pack_version)
+            success = True
         except Exception:
             PopupWindow(self.parent, 'Pack Version cannot be empty and must look like:\n\txx.xx.xx')
+        return success
 
-    def edit_mc_version(self):
+    def edit_mc_version(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: MC Version',
                             color_pair=2)
         new_mc_version = input.start()
         try:
             self.pack.mc_version = modpack.Version.to_version(new_mc_version)
+            success = True
         except Exception:
             PopupWindow(self.parent, 'MC Version cannot be empty and must look like:\n\txx.xx.xx')
+        return success
 
-    def edit_forge_version(self):
+    def edit_forge_version(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: Forge Version',
                             color_pair=2)
@@ -139,10 +161,13 @@ class PackInfoPane:
             self.pack.forge_version = modpack \
                                         .ForgeVersion \
                                         .to_version('forge-' + new_forge_version)
+            success = True
         except Exception:
             PopupWindow(self.parent, 'Forge Version cannot be empty and must look like:\n\txx.xx.x.xxxx\n\tor\n\tforge-xx.xx.x.xxxx')
+        return success
 
-    def edit_sponge_version(self):
+    def edit_sponge_version(self) -> bool:
+        success = False
         input = InputWindow(self.parent,
                             banner='Edit Pack: Sponge Version',
                             color_pair=2)
@@ -152,7 +177,9 @@ class PackInfoPane:
                 self.pack.sponge_version = modpack \
                                             .Version \
                                             .to_version(new_sponge_version)
+                success = True
             except Exception:
                 PopupWindow(self.parent, 'Sponge Version must look like:\n\txx.xx.xx')
         else:
             self.pack.sponge_version = None
+        return success

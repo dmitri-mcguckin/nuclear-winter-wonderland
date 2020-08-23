@@ -1,9 +1,8 @@
 import time
 import curses
 import tinkerer
-import tinkerer.mod as mod
-import tinkerer.builder as builder
 import tinkerer.registry as registry
+from tinkerer.builder import Builder
 from tinkerer.ui.pack_info_pane import PackInfoPane
 from tinkerer.ui.mod_info_pane import ModInfoPane
 from tinkerer.ui.mod_list_pane import ModListPane
@@ -20,12 +19,14 @@ class TinkererApp:
         self.screen.keypad(True)        # Enable special key input
         self.screen.nodelay(True)       # Disable user-input blocking
         self.running = True
+        self.dirty_changes = False
 
         # UI + Input Things
         self.selected_pane = 0
 
         # Modpack things
         self.modpack = None
+        self.builder = None
 
         # Curses configuration
         curses.savetty()        # Save the terminal state
@@ -44,7 +45,7 @@ class TinkererApp:
 
     def start(self):
         # Fetch all available pack configs
-        packs = builder.Builder.fetch_configs()
+        packs = Builder.fetch_configs()
 
         # Build the mod registry
         self.registry = registry.Registry(packs)
@@ -54,7 +55,7 @@ class TinkererApp:
                                            packs,
                                            banner='Select A Pack')
         self.config_filename = selection_window.start()
-        self.modpack = builder.Builder.load_config(self.config_filename)
+        self.modpack = Builder.load_config(self.config_filename)
 
         self.pack_info_pane = PackInfoPane(self.screen, self.modpack)
         self.mod_info_pane = ModInfoPane(self.screen, self.modpack)
@@ -62,7 +63,14 @@ class TinkererApp:
 
         while self.running:
             # Determine banner stuff
-            banner = '[{}] {}'.format(time.ctime(), tinkerer.APP_NAME)
+            if(self.dirty_changes):
+                commited = '<Unsaved changes>'
+            else:
+                commited = ''
+
+            banner = '[{}] {} {}'.format(time.ctime(),
+                                         tinkerer.APP_NAME,
+                                         commited)
             info = '<F1:Info>-<F2:Controls>'
             _, pwidth = self.screen.getmaxyx()
             b_off = int((pwidth - len(banner)) / 2)
@@ -127,23 +135,70 @@ class TinkererApp:
                                      \n\t<ENTER>: Edit selected field\
                                      \n\t<UP>: Scroll up\
                                      \n\t<DOWN>: Scroll down\
+                                     \n\t<Ctrl+UP>: Scroll up by 10\
+                                     \n\t<Ctrl+DOWN>: Scroll down by 10\
                                      \n\t<Shift+UP/Shift+LEFT>: Select previous pane\
                                      \n\t<Shift+DOWN/Shift+RIGHT>: Select next pane",
                         banner='Controls',
                         color_pair=1)
-        elif(key == ord('s') or key == ord('S')):
-            self.save_config()
-        if(self.selected_pane == 0):
-            self.pack_info_pane.read_input(key)
-        elif(self.selected_pane == 1):
-            did_remove = self.mod_info_pane.read_input(key, self.mod_list_pane
-                                                                .hovered_mod())
+        elif(key == ord('s')):
+            self.save_modpack_as()
+        elif(key == ord('C')):
+            self.build_client()
+        elif(key == ord('S')):
+            self.build_server()
 
-            # If a mod was removed, revresh the mod list pane
-            if(did_remove):
-                self.mod_list_pane.resize()
+        # Delegate input-reading to sub-panes
+        if(self.selected_pane == 0):
+            action = self.pack_info_pane.read_input(key)
+        elif(self.selected_pane == 1):
+            action = self.mod_info_pane.read_input(key, self.mod_list_pane
+                                                            .hovered_mod())
         elif(self.selected_pane == 2):
-            self.mod_list_pane.read_input(key)
+            action = self.mod_list_pane.read_input(key)
+
+        if(action == 1):  # If anything got updated, then data is uncommited
+            self.dirty_changes = True
+        if(action == 2):  # If a mod was removed, revresh the mod list pane
+            self.dirty_changes = True
+            self.mod_list_pane.scroll_position -= 1
+            self.mod_list_pane.resize()
+
+    def save_modpack(self):
+        Builder.save_config(self.config_filename, self.modpack)
+        self.dirty_changes = False
+
+    def save_modpack_as(self):
+        # input = InputWindow(self.screen, banner='Save Config As:')
+        new_filename = self.modpack.name
+
+        if(new_filename != ''):
+            if('.json' not in new_filename):
+                new_filename += '.json'
+            new_filename = new_filename.strip() \
+                                       .replace(' ', '-') \
+                                       .lower()
+            self.config_filename = new_filename
+            self.save_modpack()
+        else:
+            PopupWindow(self.screen, 'Filename cannot be blank!')
+
+    def build_client(self):
+        self.builder = Builder(self.config_filename, self.modpack)
+        client_path = self.builder.build_client()
+        PopupWindow(self.screen, 'Client succesfully built!\nSaved to: {}'
+                                 .format(client_path), color_pair=1)
+
+    def build_server(self):
+        if(self.builder is None):
+            self.builder = Builder(self.config_filename, self.modpack)
+
+        try:
+            server_path = self.builder.build_server()
+            PopupWindow(self.screen, 'Server succesfully built!\nSaved to: {}'
+                                     .format(server_path), color_pair=1)
+        except Exception as e:
+            PopupWindow(self.screen, str(e))
 
     def update_selected_panel(self):
         if(self.selected_pane < 0):
@@ -165,23 +220,3 @@ class TinkererApp:
         self.mod_list_pane.resize()
         self.mod_info_pane.resize()
         self.pack_info_pane.resize()
-
-    def create_new_mod(self) -> mod.Mod:
-        input_window = InputWindow(self.screen,
-                                   banner='New Mod: Name',
-                                   color_pair=2)
-        name = input_window.start()
-        input_window = InputWindow(self.screen,
-                                   banner='New Mod: Project ID',
-                                   color_pair=2)
-        project_id = int(input_window.start(validator=InputWindow.is_numeric))
-        input_window = InputWindow(self.screen,
-                                   banner='New Mod: File ID',
-                                   color_pair=2)
-        file_id = int(input_window.start(validator=InputWindow.is_numeric))
-        input_window = SelectionWindow(self.screen,
-                                       [True, False],
-                                       banner='New Mod: Required?:',
-                                       color_pair=2)
-        required = input_window.start()
-        return mod.Mod(name, project_id, file_id, required)
