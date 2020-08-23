@@ -1,7 +1,7 @@
 import sys
 import argparse
 import tinkerer
-import tinkerer.tinkerer_app as tapp
+from tinkerer.ui.tinkerer_app import TinkererApp
 
 
 def main(args):
@@ -11,12 +11,22 @@ def main(args):
                         allow_abbrev=False)
     parser.add_argument('-v', '--verbose',
                         dest='debug',
-                        action='store_true')
+                        action='store_true',
+                        default=False,
+                        help='enables additional debug information')
+    parser.add_argument('-V', '--version',
+                        dest='version',
+                        action='store_true',
+                        help='outputs the app version and exits')
     args = parser.parse_args(args)
+
+    if(args.version):
+        print('{} v{}'.format(tinkerer.APP_NAME, tinkerer.APP_VERSION))
+        sys.exit(0)
 
     tinkerer.DEBUG = args.debug
 
-    app = tapp.TinkererApp()
+    app = TinkererApp()
     try:
         app.start()
     except KeyboardInterrupt:

@@ -1,4 +1,4 @@
-import tinkerer.tinkerer_app as tapp
+from tinkerer.builder import Builder
 import tinkerer.mod as mod
 
 
@@ -7,7 +7,7 @@ class Registry:
         self.mods: {int: mod.Mod} = {}
 
         for config in configs:
-            pack = tapp.TinkererApp.load_config(config)
+            pack = Builder.load_config(config)
             for m in pack.mods:
                 self.mods[m.project_id] = m
 
