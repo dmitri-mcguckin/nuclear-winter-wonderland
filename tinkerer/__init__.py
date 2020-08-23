@@ -2,7 +2,7 @@ import os
 
 MAJOR = 3
 MINOR = 2
-PATCH = 1
+PATCH = 2
 
 APP_NAME = 'mc-tinkerer'
 APP_AUTHOR = 'Dmitri McGuckin'

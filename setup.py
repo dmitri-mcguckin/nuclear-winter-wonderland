@@ -27,4 +27,9 @@ setuptools.setup(
     ],
     install_requires=dependencies,
     python_requires='>=3.8.5',
+    entry_points={
+        "console_scripts": [
+            '{} = tinkerer.__main__:main'.format(tinkerer.APP_NAME),
+        ]
+    }
 )

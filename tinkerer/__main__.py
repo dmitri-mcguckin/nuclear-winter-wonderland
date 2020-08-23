@@ -4,7 +4,7 @@ import tinkerer
 from tinkerer.ui.tinkerer_app import TinkererApp
 
 
-def main(args):
+def main():
     parser = argparse.ArgumentParser(
                         prog=tinkerer.APP_NAME,
                         description=tinkerer.APP_DESCRIPTION,
@@ -18,7 +18,7 @@ def main(args):
                         dest='version',
                         action='store_true',
                         help='outputs the app version and exits')
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     if(args.version):
         print('{} v{}'.format(tinkerer.APP_NAME, tinkerer.APP_VERSION))
@@ -30,11 +30,11 @@ def main(args):
     try:
         app.start()
     except KeyboardInterrupt:
-        print('Stopping tinkerer...')
+        print('Stopping {}...'.format(tinkerer.APP_NAME))
     finally:
         app.stop()
         print('Goodbye!')
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()
