@@ -1,4 +1,7 @@
-import sys; sys.path.insert(0, '../tinkerer')
+import os
+import sys
+sys.path.insert(0, '../tinkerer')
+os.putenv('MC_HOME', '/')
 import tinkerer.mod as tm
 
 

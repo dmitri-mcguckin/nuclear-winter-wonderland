@@ -14,7 +14,7 @@ APP_LICENSE = 'MIT'
 APP_VERSION = "{}.{}.{}".format(MAJOR, MINOR, PATCH)
 
 APP_DIRECTORY = os.path.expanduser('~/.config/tinkerer')
-MC_HOME = os.getenv('MC_HOME') + os.sep
+MC_HOME = os.getenv('MC_HOME', '') + os.sep
 
 BUILDS_DIR = APP_DIRECTORY + os.sep + 'build' + os.sep
 MC_PACKS_DIR = APP_DIRECTORY + os.sep + 'mc-packs' + os.sep
